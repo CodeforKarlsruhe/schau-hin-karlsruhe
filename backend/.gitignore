@@ -1,0 +1,12 @@
+/target
+/lib
+/classes
+/checkouts
+pom.xml
+pom.xml.asc
+*.jar
+*.iml
+/git gitignore.idea
+*.class
+/.lein-*
+/.nrepl-port
