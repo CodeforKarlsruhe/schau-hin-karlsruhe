@@ -5,16 +5,17 @@
 <md-card>
   <md-input class="full-width"
             placeholder="Name"
+            [(ngModel)]="name"
             #dialogInput></md-input> <br />
 </md-card>
 <br />
 
 <md-card>
   Geschlecht: <br />
-  <md-radio-group>
+  <md-radio-group [(ngModel)]="sex">
     <md-radio-button value="male">männlich</md-radio-button> <br/>
     <md-radio-button value="female">weiblich</md-radio-button> <br/>
-    <md-radio-button value="other">Anderes: <md-input placeholder="Geschlecht"></md-input></md-radio-button> <br/>
+    <md-radio-button value="other">Anderes: <md-input placeholder="Geschlecht" [(ngModel)]="otherSex" ></md-input></md-radio-button> <br/>
   </md-radio-group>
 </md-card>
 
@@ -22,11 +23,11 @@
 
 <md-card>
   Was ist vorgefallen?: <br />
-  <md-textarea>
+  <md-textarea [(ngModel)]="whatHappend">
 
   </md-textarea>
 </md-card>
 
 <br />
 
-<button md-raised-button color="primary">Absenden</button>
+<button md-raised-button  (click)="clicked()" color="primary">Absenden</button>
