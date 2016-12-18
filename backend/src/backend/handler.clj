@@ -1,14 +1,30 @@
 (ns backend.handler
   (:require [clj-uuid :as uuid]
             [clojure.set :refer [rename-keys difference]]
+            [clojure.walk :refer [keywordize-keys stringify-keys]]
             [compojure.core :refer :all]
             [compojure.route :as route]
+            [postal.core :as mail]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [ring.middleware.json :as middleware]
-            [taoensso.faraday :as far]
+            [taoensso.faraday :as far]))
 
-            ))
+(def smtp {:host "smtp.1und1.de"
+           :user "info@rezepter.eu"
+           :port 587
+           :tls :yes})
+
+(defn send-mail
+  [record]
+  (mail/send-message smtp
+                     {:from "info@rezepter.eu"
+                      :to "tludwig@inovex.de"
+                      :subject "Neuer Eintrag"
+                      :body (str "Hallo, ein neuer Eintrag mit folgendem Inhalt wurde eingetragen:\n"
+                                 record
+                                 "Bis dann!")}))
+
 (def client-opts
   {
    ;For Production, change these properties
@@ -23,62 +39,35 @@
                             :block? true ; Block thread during table creation
                             })))
 
-(def record-must-keys  (list :email))
-(def record-could-keys (list :description))
-
-(defn check-params
-  [params]
-  (and (every? true? (map #(contains? params %) record-must-keys))
-       (empty? (difference (set (keys params))
-                           (set (concat record-could-keys record-must-keys))))))
-
-(def invalid-json-response
-  {:status 400
-   :body {:error "Invalid JSON"}})
-
 (defn create-record
   [params]
-  (let [id (uuid/v1)]
+  (let [id (str (uuid/v1))]
     (do (far/put-item client-opts
                       :record-table
                       (assoc params :id id))
+        (send-mail params)
         {:success true
          :id      id})))
 
 (defn get-all-records
   []
-  (far/scan client-opts :record-table))
+  (into () (far/scan client-opts :record-table)))
 
 (defn get-record
   [id]
-  (far/get-item client-opts :record-table {:id id}))
+  {:status 200
+   :body (far/get-item client-opts :record-table {:id id})})
 
 (defn remove-record
   [id]
-  (far/delete-item client-opts :record-table {:id id}))
-
-(defn update-expressions
-  []
-  (str "SET = "))
-
-(defn update-record
-  [id params]
-  (if (check-params params)
-    (far/update-item client-opts
-                     :record-table
-                     (:id id)
-                     {:update-expr (update-expressions)
-                      :expr-attr-vals params
-                      })
-    invalid-json-response))
-
+  (do (far/delete-item client-opts :record-table {:id id})
+      {:status 204}))
 
 (defroutes app-routes
            (GET "/" [] (get-all-records))
            (POST "/" {:keys [params]} (create-record params))
            (context "/:id" [id]
              (GET "/" [] (get-record id))
-             (POST "/" {:keys [params]} (update-record id params))
              (DELETE "/" [] (remove-record id)))
            (route/not-found "Not Found"))
 

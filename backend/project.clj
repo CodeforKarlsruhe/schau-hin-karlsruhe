@@ -3,9 +3,10 @@
   :url "http://example.com/FIXME"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.8.0"]
+                 [com.taoensso/faraday "1.9.0"]
+                 [com.draines/postal "2.0.0"]
                  [compojure "1.5.1"]
                  [danlentz/clj-uuid "0.1.6"]
-                 [com.taoensso/faraday "1.9.0"]
                  [ring-cors "0.1.8"]
                  [ring/ring-defaults "0.2.1"]
                  [ring/ring-json "0.4.0"]]
